@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rim Production Calculator</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --accent: #e74c3c;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --success: #27ae60;
+        --warning: #f39c12;
+        --danger: #e74c3c;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e7f1 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header {
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        color: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+        background-size: cover;
+        z-index: 0;
+      }
+
+      header .container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo i {
+        font-size: 2.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .logo h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .logo p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 5px;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: var(--secondary);
+        color: white;
+        text-decoration: none;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        transition: var(--transition);
+        border: none;
+        cursor: pointer;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .btn-danger {
+        background-color: var(--danger);
+      }
+
+      .btn-danger:hover {
+        background-color: #c0392b;
+      }
+
+      .btn-success {
+        background-color: var(--success);
+      }
+
+      .btn-success:hover {
+        background-color: #219653;
+      }
+
+      .card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: var(--transition);
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .card-header h2 {
+        font-size: 1.4rem;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .card-header i {
+        color: var(--secondary);
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .col {
+        flex: 1;
+        min-width: 250px;
+      }
+
+      .form-group {
+        margin-bottom: 1.2rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      select,
+      input[type="number"] {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        transition: var(--transition);
+        background-color: #f9f9f9;
+      }
+
+      select:focus,
+      input[type="number"]:focus {
+        outline: none;
+        border-color: var(--secondary);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+      }
+
+      .how-to-use {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-left: 4px solid var(--secondary);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .how-to-use h3 {
+        margin-bottom: 1rem;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .how-to-use ul {
+        padding-left: 1.5rem;
+      }
+
+      .how-to-use li {
+        margin-bottom: 0.8rem;
+        line-height: 1.6;
+      }
+
+      .how-to-use li strong {
+        color: var(--secondary);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        font-size: 0.95rem;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      }
+
+      th,
+      td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+
+      th {
+        background-color: var(--secondary);
+        color: white;
+        font-weight: 600;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      tr:hover {
+        background-color: #f1f7fd;
+      }
+
+      .summary-highlight {
+        background-color: #e3f2fd;
+        font-weight: 600;
+      }
+
+      .actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+
+      .no-data {
+        text-align: center;
+        padding: 2rem;
+        color: #777;
+        font-style: italic;
+      }
+
+      .no-data i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #ddd;
+      }
+
+      .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+      }
+
+      .detail-card {
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        padding: 1.2rem;
+        border-left: 3px solid var(--secondary);
+      }
+
+      .detail-card h4 {
+        margin-bottom: 0.8rem;
+        color: var(--primary);
+        font-size: 1.1rem;
+      }
+
+      .detail-card p {
+        margin: 0.3rem 0;
+        color: #555;
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 3rem;
+        padding: 1.5rem;
+        color: #777;
+        font-size: 0.9rem;
+      }
+
+      .capacity-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background-color: #3498db;
+        color: white;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .logo h1 {
+          font-size: 1.5rem;
+        }
+
+        .card {
+          padding: 1rem;
+        }
+
+        .actions {
+          flex-direction: column;
+        }
+
+        .actions .btn {
+          width: 100%;
+        }
+
+        .details-grid {
+          grid-template-columns: 1fr;
+        }
+
+        table {
+          font-size: 0.85rem;
+        }
+
+        th,
+        td {
+          padding: 10px 12px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header .container {
+          flex-direction: column;
+          text-align: center;
+          gap: 15px;
+        }
+
+        .logo {
+          justify-content: center;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="container">
+          <div class="logo">
+            <i class="fas fa-industry"></i>
+            <div>
+              <h1>Rim Production Calculator</h1>
+              <p>Optimize your rim manufacturing process</p>
+            </div>
+          </div>
+          <a href="Mould list.html" class="btn">
+            <i class="fas fa-cogs"></i> Rim Mould List
+          </a>
+          <a href="https://samantha-web.github.io/navigationhub/" class="btn">
+            <i class="fas fa-home"></i> Back to Home
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section class="how-to-use">
+          <h3><i class="fas fa-info-circle"></i> How to Use This Calculator</h3>
+          <ul>
+            <li>
+              <strong>Set Working Hours:</strong> Select the number of working
+              hours per day for your facility.
+            </li>
+            <li>
+              <strong>Add Rim Types:</strong> Click "Add Row" to add a new rim
+              type to calculate.
+            </li>
+            <li>
+              <strong>Select Specifications:</strong> For each row, select the
+              type of wall, profile code, and size.
+            </li>
+            <li>
+              <strong>Enter Quantity:</strong> Input the order quantity for each
+              rim type.
+            </li>
+            <li>
+              <strong>View Details:</strong> The specification details will
+              appear after selection.
+            </li>
+            <li>
+              <strong>Production Summary:</strong> View the production
+              requirements for each machine type including Per Hour Capacity.
+            </li>
+            <li>
+              <strong>Reset:</strong> Use the "Reset" button to clear all inputs
+              and start over.
+            </li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-clock"></i> Working Hours Setup</h2>
+          </div>
+          <div class="form-group">
+            <label for="working-hours">Working Hours per Day:</label>
+            <select id="working-hours">
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2>
+              <i class="fas fa-calculator"></i> Rim Production Calculation
+            </h2>
+          </div>
+          <div id="rows-container">
+            <!-- Rows will be added here -->
+          </div>
+          <div class="actions">
+            <button id="add-row" class="btn btn-success">
+              <i class="fas fa-plus"></i> Add Row
+            </button>
+            <button id="reset-button" class="btn btn-danger">
+              <i class="fas fa-redo"></i> Reset
+            </button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2>
+              <i class="fas fa-clipboard-list"></i> Production Summary for All
+              Rows
+            </h2>
+          </div>
+          <div id="summary-table" class="no-data">
+            <i class="fas fa-clipboard"></i>
+            <p>
+              No production data available. Add rim types to see the summary.
+            </p>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-industry"></i> Machine Production Summary</h2>
+          </div>
+          <div id="machine-summary-table" class="no-data">
+            <i class="fas fa-cogs"></i>
+            <p>
+              No machine data available. Add rim types to see machine
+              requirements.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Rim Production Calculator &copy; 2023 | Designed for Manufacturing
+          Efficiency
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      // Data structure with updated capacities
+      const productionData = [
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "12 x 1.75",
+          stripLength: "2.04 m",
+          pinSize: "3.95 x 39mm",
+          holes: "16",
+          dia: "217",
+          rolling: 150,
+          cutting: 150,
+          joining: 150,
+          punching: 125,
+          drilling: 174,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "14 x 1.75",
+          stripLength: "2.5 m",
+          pinSize: "3.95 x 39mm",
+          holes: "20",
+          dia: "267",
+          rolling: 150,
+          cutting: 150,
+          joining: 150,
+          punching: 125,
+          drilling: 174,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "16 x 1.75",
+          stripLength: "3.0 m",
+          pinSize: "3.95 x 39mm",
+          holes: "20 / 28",
+          dia: "319",
+          rolling: 150,
+          cutting: 150,
+          joining: 150,
+          punching: 125,
+          drilling: 174,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "18 x 1.75",
+          stripLength: "3.4 m",
+          pinSize: "3.95 x 39mm",
+          holes: "28",
+          dia: "368",
+          rolling: 150,
+          cutting: 150,
+          joining: 150,
+          punching: 125,
+          drilling: 174,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "20 x 1.75",
+          stripLength: "4.0 m",
+          pinSize: "3.95 x 54mm",
+          holes: "28 / 36",
+          dia: "420",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "24 x 1.75",
+          stripLength: "4.9 m",
+          pinSize: "3.95 x 54mm",
+          holes: "36",
+          dia: "520 - 521",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "26 x 1.75",
+          stripLength: "5.4 m",
+          pinSize: "3.95 x 54mm",
+          holes: "36",
+          dia: "572",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "26 x 1 3/8",
+          stripLength: "5.7 m",
+          pinSize: "3.95 x 54mm",
+          holes: "36",
+          dia: "602",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 0,
+        },
+        {
+          type: "Single Wall",
+          profile: "HLQ10C",
+          size: "700C x 1.75",
+          stripLength: "6 m",
+          pinSize: "3.95 x 54mm",
+          holes: "36",
+          dia: "634 - 634.5",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 0,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC-23Y",
+          size: "20 x 1.75",
+          stripLength: "3.95 m",
+          pinSize: "3.95 x 51mm",
+          holes: "28/36",
+          dia: "417.75",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 40,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC-23Y",
+          size: "24 x 1.75",
+          stripLength: "4.95 m",
+          pinSize: "3.95 x 51mm",
+          holes: "28/36",
+          dia: "519",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC-23Y",
+          size: "26 x 1.75",
+          stripLength: "5.4 m",
+          pinSize: "3.95 x 51mm",
+          holes: "32 / 36",
+          dia: "570.45",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC02D",
+          size: "20 x 1.75",
+          stripLength: "4.0 m",
+          pinSize: "4.15 x 54mm",
+          holes: "24 / 28 / 36",
+          dia: "420",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 40,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC02D",
+          size: "24 x 1.75",
+          stripLength: "4.95 m",
+          pinSize: "4.15 x 54mm",
+          holes: "28 / 32 / 36",
+          dia: "521",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC02D",
+          size: "26 x 1.75",
+          stripLength: "5.4 m",
+          pinSize: "4.15 x 54mm",
+          holes: "32 / 36",
+          dia: "572",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC02D",
+          size: "27.5 x 1.75",
+          stripLength: "5.6 m",
+          pinSize: "4.15 x 54mm",
+          holes: "32/36",
+          dia: "595",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC02D",
+          size: "28 x 1.75",
+          stripLength: "6.0 m",
+          pinSize: "4.15 x 54mm",
+          holes: "32/36",
+          dia: "634 - 634.5",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC02D",
+          size: "29 x 1.75",
+          stripLength: "6.0 m",
+          pinSize: "4.15 x 54mm",
+          holes: "32 / 36",
+          dia: "634 - 634.5",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC02D",
+          size: "700C x 1.75",
+          stripLength: "6.0 m",
+          pinSize: "4.15 x 54mm",
+          holes: "28 / 32 / 36",
+          dia: "634 - 634.5",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+        {
+          type: "Double Wall",
+          profile: "HLQC06",
+          size: "700",
+          stripLength: "6.0 m",
+          pinSize: "3.95 x 51mm",
+          holes: "28 / 32",
+          dia: "633.55",
+          rolling: 125,
+          cutting: 125,
+          joining: 125,
+          punching: 125,
+          drilling: 150,
+          cnc: 37.5,
+        },
+      ];
+
+      // Populate working hours dropdown
+      const workingHoursSelect = document.getElementById("working-hours");
+      for (let i = 8; i <= 24; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.text = i;
+        workingHoursSelect.appendChild(option);
+      }
+      workingHoursSelect.value = 8; // Set default value
+
+      // Get unique values for dropdowns
+      const types = [...new Set(productionData.map((item) => item.type))];
+      const profilesByType = {};
+      productionData.forEach((item) => {
+        if (!profilesByType[item.type]) {
+          profilesByType[item.type] = [
+            ...new Set(
+              productionData
+                .filter((i) => i.type === item.type)
+                .map((i) => i.profile)
+            ),
+          ];
+        }
+      });
+      const sizesByTypeAndProfile = {};
+      productionData.forEach((item) => {
+        const key = `${item.type}-${item.profile}`;
+        if (!sizesByTypeAndProfile[key]) {
+          sizesByTypeAndProfile[key] = [
+            ...new Set(
+              productionData
+                .filter(
+                  (i) => i.type === item.type && i.profile === item.profile
+                )
+                .map((i) => i.size)
+            ),
+          ];
+        }
+      });
+
+      // Function to create a new row
+      function createRow() {
+        const row = document.createElement("div");
+        row.className = "card";
+        row.innerHTML = `
+                <div class="card-header">
+                    <h2><i class="fas fa-bicycle"></i> Rim Type</h2>
+                    <button class="btn btn-danger remove-row">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="type">Type of Wall</label>
+                            <select class="type-of-wall">
+                                <option value="">Select Type of Wall</option>
+                                ${types
+                                  .map(
+                                    (type) =>
+                                      `<option value="${type}">${type}</option>`
+                                  )
+                                  .join("")}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="profile">Profile Code</label>
+                            <select class="profile-code">
+                                <option value="">Select Profile Code</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="size">Size</label>
+                            <select class="size">
+                                <option value="">Select Size</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="qty">Order Quantity</label>
+                            <input type="number" class="order-qty" placeholder="Enter quantity" min="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="details"></div>
+                <div class="production-summary"></div>
+            `;
+
+        // Event listeners for dynamic updates
+        const typeSelect = row.querySelector(".type-of-wall");
+        const profileSelect = row.querySelector(".profile-code");
+        const sizeSelect = row.querySelector(".size");
+        const orderQtyInput = row.querySelector(".order-qty");
+        const removeBtn = row.querySelector(".remove-row");
+
+        typeSelect.addEventListener("change", () => {
+          const selectedType = typeSelect.value;
+          profileSelect.innerHTML =
+            '<option value="">Select Profile Code</option>';
+          sizeSelect.innerHTML = '<option value="">Select Size</option>';
+          if (selectedType) {
+            profilesByType[selectedType].forEach((profile) => {
+              const option = document.createElement("option");
+              option.value = profile;
+              option.text = profile;
+              profileSelect.appendChild(option);
+            });
+          }
+          updateRow(row);
+        });
+
+        profileSelect.addEventListener("change", () => {
+          const selectedType = typeSelect.value;
+          const selectedProfile = profileSelect.value;
+          sizeSelect.innerHTML = '<option value="">Select Size</option>';
+          if (selectedType && selectedProfile) {
+            sizesByTypeAndProfile[`${selectedType}-${selectedProfile}`].forEach(
+              (size) => {
+                const option = document.createElement("option");
+                option.value = size;
+                option.text = size;
+                sizeSelect.appendChild(option);
+              }
+            );
+          }
+          updateRow(row);
+        });
+
+        sizeSelect.addEventListener("change", () => updateRow(row));
+        orderQtyInput.addEventListener("input", () => updateRow(row));
+        removeBtn.addEventListener("click", () => {
+          row.remove();
+          updateSummary();
+        });
+
+        return row;
+      }
+
+      // Function to update row details and summary
+      function updateRow(row) {
+        const type = row.querySelector(".type-of-wall").value;
+        const profile = row.querySelector(".profile-code").value;
+        const size = row.querySelector(".size").value;
+        const orderQty = parseFloat(row.querySelector(".order-qty").value) || 0;
+        const workingHours =
+          parseFloat(document.getElementById("working-hours").value) || 8;
+
+        const detailsDiv = row.querySelector(".details");
+        const summaryDiv = row.querySelector(".production-summary");
+
+        if (type && profile && size && orderQty > 0) {
+          const data = productionData.find(
+            (item) =>
+              item.type === type &&
+              item.profile === profile &&
+              item.size === size
+          );
+          if (data) {
+            // Display details
+            detailsDiv.innerHTML = `
+                        <div class="details-grid">
+                            <div class="detail-card">
+                                <h4>Rim Specifications</h4>
+                                <p><strong>Type:</strong> ${data.type}</p>
+                                <p><strong>Profile:</strong> ${data.profile}</p>
+                                <p><strong>Size:</strong> ${data.size}</p>
+                            </div>
+                            <div class="detail-card">
+                                <h4>Manufacturing Details</h4>
+                                <p><strong>Strip Length:</strong> ${data.stripLength}</p>
+                                <p><strong>Pin Size:</strong> ${data.pinSize}</p>
+                                <p><strong>Holes:</strong> ${data.holes}</p>
+                            </div>
+                            <div class="detail-card">
+                                <h4>Dimensions</h4>
+                                <p><strong>Diameter:</strong> ${data.dia} mm</p>
+                                <p><strong>Order Qty:</strong> ${orderQty}</p>
+                            </div>
+                        </div>
+                    `;
+
+            // Calculate and display production summary
+            const machines = [
+              { name: "Rolling", capacity: data.rolling },
+              { name: "Cutting", capacity: data.cutting },
+              { name: "Joining", capacity: data.joining },
+              { name: "Punching", capacity: data.punching },
+              { name: "Drilling", capacity: data.drilling },
+              { name: "CNC", capacity: data.cnc },
+            ];
+
+            let summaryHTML = `
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-tasks"></i> Production Requirements</h2>
+                            </div>
+                            <table>
+                                <tr>
+                                    <th>Machine Type</th>
+                                    <th>Per Hour Capacity</th>
+                                    <th>Required Hours</th>
+                                    <th>Days Required</th>
+                                </tr>
+                    `;
+            machines.forEach((machine) => {
+              if (machine.capacity > 0) {
+                const requiredHours = (orderQty / machine.capacity).toFixed(2);
+                const daysRequired = (
+                  orderQty /
+                  machine.capacity /
+                  workingHours
+                ).toFixed(2);
+                summaryHTML += `
+                                <tr>
+                                    <td>${machine.name}</td>
+                                    <td><span class="capacity-badge">${machine.capacity}</span></td>
+                                    <td>${requiredHours}</td>
+                                    <td>${daysRequired}</td>
+                                </tr>
+                            `;
+              }
+            });
+            summaryHTML += "</table></div>";
+            summaryDiv.innerHTML = summaryHTML;
+          } else {
+            detailsDiv.innerHTML = "";
+            summaryDiv.innerHTML = "";
+          }
+        } else {
+          detailsDiv.innerHTML = "";
+          summaryDiv.innerHTML = "";
+        }
+        updateSummary();
+      }
+
+      // Function to update summary tables
+      function updateSummary() {
+        const workingHours =
+          parseFloat(document.getElementById("working-hours").value) || 8;
+        const rows = document.querySelectorAll(".row");
+        const summaryData = [];
+        let totalOrderQty = 0;
+
+        // Collect data for first table
+        rows.forEach((row) => {
+          const type = row.querySelector(".type-of-wall").value;
+          const profile = row.querySelector(".profile-code").value;
+          const size = row.querySelector(".size").value;
+          const orderQty =
+            parseFloat(row.querySelector(".order-qty").value) || 0;
+
+          if (type && profile && size && orderQty > 0) {
+            const data = productionData.find(
+              (item) =>
+                item.type === type &&
+                item.profile === profile &&
+                item.size === size
+            );
+            if (data) {
+              summaryData.push({
+                type: data.type,
+                profile: data.profile,
+                size: data.size,
+                stripLength: data.stripLength,
+                pinSize: data.pinSize,
+                dia: data.dia,
+                orderQty: orderQty,
+              });
+              totalOrderQty += orderQty;
+            }
+          }
+        });
+
+        // First table: Row-specific details
+        let summaryHTML = "";
+        if (summaryData.length > 0) {
+          summaryHTML = `
+                    <table>
+                        <tr>
+                            <th>Type</th>
+                            <th>Profile</th>
+                            <th>Size</th>
+                            <th>Strip Length</th>
+                            <th>Pin Size</th>
+                            <th>Diameter</th>
+                            <th>Order Qty</th>
+                        </tr>
+                `;
+          summaryData.forEach((rowData) => {
+            summaryHTML += `
+                        <tr>
+                            <td>${rowData.type}</td>
+                            <td>${rowData.profile}</td>
+                            <td>${rowData.size}</td>
+                            <td>${rowData.stripLength}</td>
+                            <td>${rowData.pinSize}</td>
+                            <td>${rowData.dia} mm</td>
+                            <td>${rowData.orderQty}</td>
+                        </tr>
+                    `;
+          });
+          summaryHTML += `
+                    <tr class="summary-highlight">
+                        <td colspan="6"><strong>Total Order Quantity</strong></td>
+                        <td><strong>${totalOrderQty}</strong></td>
+                    </tr>
+                </table>
+                `;
+          document.getElementById("summary-table").innerHTML = summaryHTML;
+        } else {
+          document.getElementById("summary-table").innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-clipboard"></i>
+                        <p>No production data available. Add rim types to see the summary.</p>
+                    </div>
+                `;
+        }
+
+        // Second table: Machine summary
+        const machines = [
+          { name: "Rolling", totalHours: 0 },
+          { name: "Cutting", totalHours: 0 },
+          { name: "Joining", totalHours: 0 },
+          { name: "Punching", totalHours: 0 },
+          { name: "Drilling", totalHours: 0 },
+          { name: "CNC", totalHours: 0 },
+        ];
+
+        // Calculate total hours for each machine
+        document.querySelectorAll(".row").forEach((row) => {
+          const type = row.querySelector(".type-of-wall").value;
+          const profile = row.querySelector(".profile-code").value;
+          const size = row.querySelector(".size").value;
+          const orderQty =
+            parseFloat(row.querySelector(".order-qty").value) || 0;
+
+          if (type && profile && size && orderQty > 0) {
+            const data = productionData.find(
+              (item) =>
+                item.type === type &&
+                item.profile === profile &&
+                item.size === size
+            );
+            if (data) {
+              machines[0].totalHours +=
+                data.rolling > 0 ? orderQty / data.rolling : 0;
+              machines[1].totalHours +=
+                data.cutting > 0 ? orderQty / data.cutting : 0;
+              machines[2].totalHours +=
+                data.joining > 0 ? orderQty / data.joining : 0;
+              machines[3].totalHours +=
+                data.punching > 0 ? orderQty / data.punching : 0;
+              machines[4].totalHours +=
+                data.drilling > 0 ? orderQty / data.drilling : 0;
+              machines[5].totalHours += data.cnc > 0 ? orderQty / data.cnc : 0;
+            }
+          }
+        });
+
+        let machineSummaryHTML = "";
+        let hasData = false;
+
+        machines.forEach((machine) => {
+          if (machine.totalHours > 0) {
+            hasData = true;
+          }
+        });
+
+        if (hasData) {
+          machineSummaryHTML = `
+                    <table>
+                        <tr>
+                            <th>Machine Type</th>
+                            <th>Total Hours Required</th>
+                            <th>Days Required</th>
+                        </tr>
+                `;
+          machines.forEach((machine) => {
+            if (machine.totalHours > 0) {
+              const daysRequired = (machine.totalHours / workingHours).toFixed(
+                2
+              );
+              machineSummaryHTML += `
+                            <tr>
+                                <td>${machine.name}</td>
+                                <td>${machine.totalHours.toFixed(2)}</td>
+                                <td>${daysRequired}</td>
+                            </tr>
+                        `;
+            }
+          });
+          machineSummaryHTML += "</table>";
+          document.getElementById("machine-summary-table").innerHTML =
+            machineSummaryHTML;
+        } else {
+          document.getElementById("machine-summary-table").innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-cogs"></i>
+                        <p>No machine data available. Add rim types to see machine requirements.</p>
+                    </div>
+                `;
+        }
+      }
+
+      // Function to reset the form
+      function resetForm() {
+        // Reset working hours to default
+        workingHoursSelect.value = 8;
+
+        // Clear all rows and add initial 3 rows
+        const rowsContainer = document.getElementById("rows-container");
+        rowsContainer.innerHTML = "";
+        for (let i = 0; i < 3; i++) {
+          rowsContainer.appendChild(createRow());
+        }
+
+        // Clear summary tables
+        document.getElementById("summary-table").innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-clipboard"></i>
+                    <p>No production data available. Add rim types to see the summary.</p>
+                </div>
+            `;
+
+        document.getElementById("machine-summary-table").innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-cogs"></i>
+                    <p>No machine data available. Add rim types to see machine requirements.</p>
+                </div>
+            `;
+      }
+
+      // Add initial 3 rows
+      const rowsContainer = document.getElementById("rows-container");
+      for (let i = 0; i < 3; i++) {
+        rowsContainer.appendChild(createRow());
+      }
+
+      // Add new row on button click
+      document.getElementById("add-row").addEventListener("click", () => {
+        rowsContainer.appendChild(createRow());
+        updateSummary();
+      });
+
+      // Reset form on button click
+      document
+        .getElementById("reset-button")
+        .addEventListener("click", resetForm);
+
+      // Update all rows and summary when working hours change
+      workingHoursSelect.addEventListener("change", () => {
+        document.querySelectorAll(".row").forEach((row) => updateRow(row));
+        updateSummary();
+      });
+    </script>
+  </body>
+</html>
