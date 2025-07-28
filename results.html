@@ -1,0 +1,1166 @@
+<script type="text/javascript">
+  var gk_isXlsx = false;
+  var gk_xlsxFileLookup = {};
+  var gk_fileData = {};
+  function filledCell(cell) {
+    return cell !== "" && cell != null;
+  }
+  function loadFileData(filename) {
+    if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+      try {
+        var workbook = XLSX.read(gk_fileData[filename], { type: "base64" });
+        var firstSheetName = workbook.SheetNames[0];
+        var worksheet = workbook.Sheets[firstSheetName];
+
+        // Convert sheet to JSON to filter blank rows
+        var jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          header: 1,
+          blankrows: false,
+          defval: "",
+        });
+        // Filter out blank rows (rows where all cells are empty, null, or undefined)
+        var filteredData = jsonData.filter((row) => row.some(filledCell));
+
+        // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+        var headerRowIndex = filteredData.findIndex(
+          (row, index) =>
+            row.filter(filledCell).length >=
+            filteredData[index + 1]?.filter(filledCell).length
+        );
+        // Fallback
+        if (headerRowIndex === -1 || headerRowIndex > 25) {
+          headerRowIndex = 0;
+        }
+
+        // Convert filtered JSON back to CSV
+        var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+        csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+        return csv;
+      } catch (e) {
+        console.error(e);
+        return "";
+      }
+    }
+    return gk_fileData[filename] || "";
+  }
+</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rim Strip Cutting Results</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --accent: #e74c3c;
+        --light: #ecf0f1;
+        --dark: #34495e;
+        --success: #2ecc71;
+        --warning: #f39c12;
+        --info: #1abc9c;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        color: var(--dark);
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      @keyframes gradientBG {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+      }
+
+      header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 35px 50px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0) 70%
+        );
+        transform: rotate(30deg);
+      }
+
+      h1 {
+        font-size: 3.2rem;
+        margin-bottom: 15px;
+        position: relative;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      .subtitle {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        max-width: 900px;
+        margin: 0 auto;
+        position: relative;
+        line-height: 1.8;
+      }
+
+      .output-section {
+        padding: 30px;
+        background-color: var(--light);
+        border-radius: 15px;
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .section-title {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 4px solid var(--secondary);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+      }
+
+      .section-title i {
+        margin-right: 15px;
+        color: var(--secondary);
+      }
+
+      button {
+        background-color: var(--secondary);
+        color: white;
+        border: none;
+        padding: 14px 22px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.05rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      button i {
+        margin-right: 10px;
+      }
+
+      button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      }
+
+      .btn-danger {
+        background-color: var(--accent);
+      }
+
+      .btn-danger:hover {
+        background-color: #c0392b;
+      }
+
+      .result-container {
+        background-color: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        margin-top: 30px;
+        border: 1px solid #eaeaea;
+      }
+
+      .waste-summary {
+        font-size: 1.4rem;
+        padding: 22px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .waste-low {
+        background-color: rgba(46, 204, 113, 0.15);
+        color: #27ae60;
+        border: 2px solid #2ecc71;
+      }
+
+      .waste-high {
+        background-color: rgba(231, 76, 60, 0.15);
+        color: #c0392b;
+        border: 2px solid #e74c3c;
+      }
+
+      .material-usage {
+        margin-bottom: 30px;
+        padding: 25px;
+        background-color: white;
+        border-left: 6px solid var(--secondary);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+      }
+
+      .material-usage:hover {
+        transform: translateY(-5px);
+      }
+
+      .material-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        font-weight: bold;
+        color: var(--primary);
+        font-size: 1.3rem;
+        padding-bottom: 15px;
+        border-bottom: 2px dashed #eee;
+      }
+
+      .cuts-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .cut-item {
+        padding: 14px 22px;
+        background-color: var(--light);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        min-width: 140px;
+        justify-content: space-between;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+      }
+
+      .cut-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .cut-size {
+        font-weight: bold;
+        color: var(--primary);
+        font-size: 1.1rem;
+      }
+
+      .cut-count {
+        background: var(--secondary);
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-left: 12px;
+        font-weight: bold;
+      }
+
+      .waste-item {
+        background-color: rgba(231, 76, 60, 0.1);
+        border: 1px dashed #e74c3c;
+      }
+
+      .size-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 15px;
+        font-size: 1rem;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .size-details div {
+        margin: 10px 0;
+        display: flex;
+      }
+
+      .size-details span {
+        font-weight: 600;
+        min-width: 120px;
+      }
+
+      .summary-card {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px 0;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #eaeaea;
+      }
+
+      .summary-card div {
+        text-align: center;
+        flex: 1;
+        padding: 15px;
+      }
+
+      .summary-card .value {
+        font-size: 2.2rem;
+        font-weight: bold;
+        color: var(--secondary);
+        margin-bottom: 10px;
+      }
+
+      .summary-card .label {
+        font-size: 1.1rem;
+        color: #666;
+        font-weight: 600;
+      }
+
+      .utilization-bar {
+        height: 10px;
+        background: #e0e0e0;
+        border-radius: 5px;
+        margin: 15px 0;
+        overflow: hidden;
+      }
+
+      .utilization-fill {
+        height: 100%;
+        background: var(--success);
+        border-radius: 5px;
+        transition: width 1s ease;
+      }
+
+      .warning-box {
+        background: rgba(243, 156, 18, 0.15);
+        border: 2px solid #f39c12;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 25px 0;
+        display: flex;
+        align-items: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .warning-box i {
+        margin-right: 15px;
+        color: #f39c12;
+        font-size: 2rem;
+      }
+
+      .efficiency-label {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      .efficiency-high {
+        background: rgba(46, 204, 113, 0.2);
+        color: #27ae60;
+      }
+
+      .efficiency-medium {
+        background: rgba(243, 156, 18, 0.2);
+        color: #d35400;
+      }
+
+      .efficiency-low {
+        background: rgba(231, 76, 60, 0.2);
+        color: #c0392b;
+      }
+
+      .cut-visualization {
+        margin: 20px 0;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+      }
+
+      .cut-bar {
+        height: 30px;
+        background: #e0e0e0;
+        border-radius: 5px;
+        position: relative;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .cut-segment {
+        height: 100%;
+        display: inline-block;
+        position: absolute;
+      }
+
+      .cut-segment-used {
+        background: var(--success);
+      }
+
+      .cut-segment-waste {
+        background: var(--accent);
+      }
+
+      .cut-label {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-size: 0.9rem;
+        text-align: center;
+        width: 100%;
+      }
+
+      .shortage-container {
+        background-color: rgba(231, 76, 60, 0.1);
+        border: 2px solid #e74c3c;
+        border-radius: 10px;
+        padding: 25px;
+        margin: 30px 0;
+      }
+
+      .shortage-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        color: #c0392b;
+        font-size: 1.4rem;
+        font-weight: bold;
+      }
+
+      .shortage-header i {
+        margin-right: 15px;
+        font-size: 1.8rem;
+      }
+
+      .shortage-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .shortage-size {
+        font-weight: bold;
+        color: var(--dark);
+      }
+
+      .shortage-qty {
+        background: var(--accent);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+      }
+
+      .shortage-details {
+        margin-top: 15px;
+        font-size: 1rem;
+        color: #666;
+      }
+
+      .progress-container {
+        display: flex;
+        justify-content: center;
+        margin: 30px 0;
+      }
+
+      .progress-ring {
+        position: relative;
+        width: 180px;
+        height: 180px;
+      }
+
+      .progress-ring-circle {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        transition: stroke-dashoffset 1s ease;
+      }
+
+      .progress-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--primary);
+      }
+
+      .progress-label {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-top: 15px;
+        color: var(--dark);
+      }
+
+      .recalc-message {
+        background: rgba(52, 152, 219, 0.15);
+        border: 2px solid var(--secondary);
+        border-radius: 10px;
+        padding: 20px;
+        margin: 25px 0;
+        display: flex;
+        align-items: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .recalc-message i {
+        margin-right: 15px;
+        color: var(--secondary);
+        font-size: 2rem;
+      }
+
+      @media (max-width: 992px) {
+        .summary-card {
+          flex-direction: column;
+          gap: 20px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        header {
+          padding: 25px 20px;
+        }
+
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        .subtitle {
+          font-size: 1.1rem;
+        }
+
+        .output-section {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><i class="fas fa-chart-line"></i> Optimization Results</h1>
+        <p class="subtitle">
+          Detailed analysis of material usage and cutting patterns
+        </p>
+      </header>
+
+      <div class="output-section">
+        <h2 class="section-title">
+          <i class="fas fa-chart-line"></i> Optimization Results
+        </h2>
+
+        <div id="results-placeholder">
+          <div class="instructions">
+            <h3><i class="fas fa-lightbulb"></i> No Results Available</h3>
+            <p>Please return to the input page to enter parameters.</p>
+          </div>
+        </div>
+
+        <div id="results-container" style="display: none">
+          <!-- Results will be populated here -->
+        </div>
+
+        <div class="action-buttons">
+          <button
+            class="btn-danger"
+            onclick="window.location.href='Rim-cutting-optimizer.html'"
+          >
+            <i class="fas fa-arrow-left"></i> Back to Input
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const data = JSON.parse(sessionStorage.getItem("cuttingOptimizerData"));
+        if (!data) {
+          document.getElementById("results-placeholder").style.display =
+            "block";
+          document.getElementById("results-container").style.display = "none";
+          return;
+        }
+
+        const { materials, sizeRequirements, currentUnit } = data;
+        const result = calculateCuttingPlan(materials, sizeRequirements);
+        displayResults(result, currentUnit);
+
+        function calculateCuttingPlan(materials, sizeRequirements) {
+          let availableStrips = [];
+          materials.forEach((material) => {
+            for (let i = 0; i < material.qty; i++) {
+              availableStrips.push({
+                length: material.length,
+                type: material.type,
+                profile: material.profile,
+                size: material.size,
+                remaining: material.length,
+                cuts: [],
+              });
+            }
+          });
+
+          availableStrips.sort((a, b) => b.length - a.length);
+          let requiredPieces = [...sizeRequirements];
+          requiredPieces.sort((a, b) => b.length - a.length);
+
+          let bestPlan = null;
+          let bestWaste = Infinity;
+          let totalStripsUsed = 0;
+          let totalUsedMaterial = 0;
+          let unassignedPieces = [];
+
+          // Try multiple packing strategies
+          for (let i = 0; i < 3; i++) {
+            const strategyPlan = tryPackingStrategy(
+              [...availableStrips],
+              [...requiredPieces],
+              i
+            );
+            if (strategyPlan.totalWaste < bestWaste) {
+              bestPlan = strategyPlan;
+              bestWaste = strategyPlan.totalWaste;
+              totalStripsUsed = strategyPlan.totalStripsUsed;
+              totalUsedMaterial = strategyPlan.totalUsedMaterial;
+              unassignedPieces = strategyPlan.unassignedPieces;
+            }
+          }
+
+          const materialSummary = materials.map((m) => ({
+            type: m.type,
+            profile: m.profile,
+            size: m.size,
+            length: m.length,
+            total: m.qty,
+            used: bestPlan.plan.filter(
+              (s) =>
+                s.type === m.type &&
+                s.profile === m.profile &&
+                s.size === m.size &&
+                s.cuts.length > 0
+            ).length,
+            remaining:
+              m.qty -
+              bestPlan.plan.filter(
+                (s) =>
+                  s.type === m.type &&
+                  s.profile === m.profile &&
+                  s.size === m.size &&
+                  s.cuts.length > 0
+              ).length,
+          }));
+
+          // Group unassigned pieces by type, profile, and size
+          const groupedShortages = {};
+          unassignedPieces.forEach((piece) => {
+            const key = `${piece.type}|${piece.profile}|${piece.size}`;
+            if (!groupedShortages[key]) {
+              groupedShortages[key] = {
+                type: piece.type,
+                profile: piece.profile,
+                size: piece.size,
+                length: piece.length,
+                count: 0,
+                requiredTubes: 0,
+              };
+            }
+            groupedShortages[key].count++;
+            groupedShortages[key].requiredTubes = Math.ceil(
+              groupedShortages[key].count / 3
+            );
+          });
+
+          const shortages = Object.values(groupedShortages);
+
+          return {
+            ...bestPlan,
+            materialSummary,
+            shortages,
+            totalRims: sizeRequirements.length - unassignedPieces.length,
+            minRimLength: Math.min(...sizeRequirements.map((p) => p.length)),
+            recalculated: true,
+          };
+
+          function tryPackingStrategy(strips, pieces, strategy) {
+            let localTotalStripsUsed = 0;
+            let localTotalUsedMaterial = 0;
+            strips.forEach((strip) => {
+              strip.remaining = strip.length;
+              strip.cuts = [];
+            });
+            pieces.forEach((piece) => (piece.assigned = false));
+
+            const plan = [];
+            let totalWaste = 0;
+
+            if (strategy === 0) {
+              for (const piece of pieces) {
+                const strip = findBestStrip(piece, strips, true);
+                if (strip) {
+                  addToStrip(piece, strip, plan);
+                }
+              }
+            } else if (strategy === 1) {
+              for (const piece of pieces) {
+                const strip = findBestStrip(piece, strips, true, true);
+                if (strip) {
+                  addToStrip(piece, strip, plan);
+                }
+              }
+            } else {
+              const sizeGroups = {};
+              pieces.forEach((piece) => {
+                const key = `${piece.type}|${piece.profile}|${piece.size}`;
+                if (!sizeGroups[key]) sizeGroups[key] = [];
+                sizeGroups[key].push(piece);
+              });
+
+              const sortedGroups = Object.values(sizeGroups).sort(
+                (a, b) => b[0].length - a[0].length
+              );
+
+              for (const group of sortedGroups) {
+                for (const piece of group) {
+                  const strip = findBestStrip(piece, strips, true);
+                  if (strip) {
+                    addToStrip(piece, strip, plan);
+                  }
+                }
+              }
+            }
+
+            const unassigned = pieces.filter((p) => !p.assigned);
+            for (const piece of unassigned) {
+              const strip = findBestStrip(piece, strips, false);
+              if (strip) {
+                addToStrip(piece, strip, plan);
+              }
+            }
+
+            plan.forEach((strip) => {
+              totalWaste += strip.remaining;
+            });
+
+            const totalRequiredLength = pieces.reduce(
+              (sum, piece) => sum + piece.length,
+              0
+            );
+            const wastePercent = localTotalUsedMaterial
+              ? (totalWaste / localTotalUsedMaterial) * 100
+              : 0;
+            const utilization = 100 - wastePercent;
+
+            return {
+              plan,
+              totalWaste,
+              totalUsedMaterial: localTotalUsedMaterial,
+              totalStripsUsed: localTotalStripsUsed,
+              utilization,
+              wastePercent,
+              unassignedPieces: pieces.filter((p) => !p.assigned),
+            };
+
+            function findBestStrip(
+              piece,
+              strips,
+              matchTypeProfile,
+              bestFit = false
+            ) {
+              const suitableStrips = strips.filter(
+                (strip) =>
+                  strip.remaining >= piece.length &&
+                  (!matchTypeProfile ||
+                    (strip.type === piece.type &&
+                      strip.profile === piece.profile))
+              );
+
+              if (suitableStrips.length === 0) return null;
+
+              if (bestFit) {
+                return suitableStrips.reduce((best, current) => {
+                  const bestWaste = best.remaining - piece.length;
+                  const currentWaste = current.remaining - piece.length;
+                  return currentWaste < bestWaste ? current : best;
+                });
+              }
+
+              return suitableStrips[0];
+            }
+
+            function addToStrip(piece, strip, plan) {
+              const existingCut = strip.cuts.find(
+                (c) =>
+                  c.size === piece.size &&
+                  c.type === piece.type &&
+                  c.profile === piece.profile
+              );
+
+              if (existingCut) {
+                existingCut.count++;
+              } else {
+                strip.cuts.push({
+                  size: piece.size,
+                  length: piece.length,
+                  count: 1,
+                  type: piece.type,
+                  profile: piece.profile,
+                });
+              }
+
+              strip.remaining -= piece.length;
+              piece.assigned = true;
+
+              if (strip.cuts.length === 1) {
+                localTotalStripsUsed++;
+                localTotalUsedMaterial += strip.length;
+                if (!plan.includes(strip)) {
+                  plan.push(strip);
+                }
+              }
+            }
+          }
+        }
+
+        function displayResults(result, currentUnit) {
+          document.getElementById("results-placeholder").style.display = "none";
+          const resultsContainer = document.getElementById("results-container");
+          resultsContainer.style.display = "block";
+          resultsContainer.innerHTML = "";
+
+          if (result.plan.some((strip) => strip.cuts.length === 0)) {
+            const warning = document.createElement("div");
+            warning.className = "warning-box";
+            warning.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Warning:</strong> Some pieces could not be assigned due to insufficient material.
+                        </div>
+                    `;
+            resultsContainer.appendChild(warning);
+          }
+
+          const wasteSummary = document.createElement("div");
+          wasteSummary.className = `waste-summary ${
+            result.wastePercent < 5 ? "waste-low" : "waste-high"
+          }`;
+          const efficiencyClass =
+            result.utilization > 90
+              ? "efficiency-high"
+              : result.utilization > 75
+              ? "efficiency-medium"
+              : "efficiency-low";
+          const efficiencyText =
+            result.utilization > 90
+              ? "High Efficiency"
+              : result.utilization > 75
+              ? "Medium Efficiency"
+              : "Low Efficiency";
+          wasteSummary.innerHTML = `
+                    <div>
+                        <i class="fas fa-recycle"></i> Total Waste: <span id="total-waste">${result.totalWaste.toFixed(
+                          2
+                        )} ${currentUnit}</span>
+                    </div>
+                    <div>
+                        Utilization Rate: <span id="waste-percent">${result.utilization.toFixed(
+                          1
+                        )}%</span>
+                        <div class="efficiency-label ${efficiencyClass}">${efficiencyText}</div>
+                    </div>
+                `;
+          resultsContainer.appendChild(wasteSummary);
+
+          const recalcMessage = document.createElement("div");
+          recalcMessage.className = "recalc-message";
+          recalcMessage.style.display = result.recalculated ? "flex" : "none";
+          recalcMessage.innerHTML = `
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Optimized using advanced bin-packing algorithm</span>
+                `;
+          resultsContainer.appendChild(recalcMessage);
+
+          const progressContainer = document.createElement("div");
+          progressContainer.className = "progress-container";
+          const utilizationPercent = Math.round(result.utilization);
+          const circumference = 2 * Math.PI * 80;
+          const offset =
+            circumference - (utilizationPercent / 100) * circumference;
+          progressContainer.innerHTML = `
+                    <div class="progress-ring">
+                        <svg width="180" height="180" viewBox="0 0 180 180">
+                            <circle cx="90" cy="90" r="80" stroke="#e0e0e0" stroke-width="12" fill="none"></circle>
+                            <circle id="utilization-ring" cx="90" cy="90" r="80" 
+                                    stroke="${
+                                      utilizationPercent >= 90
+                                        ? "#2ecc71"
+                                        : utilizationPercent >= 75
+                                        ? "#f1c40f"
+                                        : "#e74c3c"
+                                    }" 
+                                    stroke-width="12" stroke-dasharray="502.4" stroke-dashoffset="${offset}" 
+                                    stroke-linecap="round" fill="none" transform="rotate(-90 90 90)"></circle>
+                        </svg>
+                        <div class="progress-text"><span id="utilization-percent">${utilizationPercent}%</span></div>
+                    </div>
+                    <div class="progress-label">Material Utilization</div>
+                `;
+          resultsContainer.appendChild(progressContainer);
+
+          const summaryCard = document.createElement("div");
+          summaryCard.className = "summary-card";
+          summaryCard.innerHTML = `
+                    <div>
+                        <div class="value" id="total-rims">${
+                          result.totalRims
+                        }</div>
+                        <div class="label">Rims Produced</div>
+                    </div>
+                    <div>
+                        <div class="value" id="utilization">${result.utilization.toFixed(
+                          1
+                        )}%</div>
+                        <div class="label">Efficiency</div>
+                    </div>
+                `;
+          resultsContainer.appendChild(summaryCard);
+
+          if (result.shortages.length > 0) {
+            const shortageContainer = document.createElement("div");
+            shortageContainer.className = "shortage-container";
+            shortageContainer.innerHTML = `
+                        <div class="shortage-header">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Material Shortages
+                        </div>
+                    `;
+
+            result.shortages.forEach((shortage) => {
+              const shortageItem = document.createElement("div");
+              shortageItem.className = "shortage-item";
+              shortageItem.innerHTML = `
+                            <div class="shortage-size">${shortage.type} - ${shortage.profile} - ${shortage.size}</div>
+                            <div class="shortage-qty">${shortage.count} rims, ${shortage.requiredTubes} Strips required</div>
+                        `;
+              shortageContainer.appendChild(shortageItem);
+            });
+
+            shortageContainer.innerHTML += `
+                        <div class="shortage-details">
+                            <i class="fas fa-info-circle"></i> 
+                            Additional material required to fulfill these rim requirements
+                        </div>
+                    `;
+
+            resultsContainer.appendChild(shortageContainer);
+          }
+
+          const materialSummaryContainer = document.createElement("div");
+          materialSummaryContainer.className = "result-container";
+          materialSummaryContainer.innerHTML =
+            '<h3><i class="fas fa-boxes"></i> Material Usage Summary</h3>';
+          const materialSummary = document.createElement("div");
+          materialSummary.id = "material-summary";
+
+          if (result.materialSummary.length > 0) {
+            result.materialSummary.forEach((material) => {
+              const materialElem = document.createElement("div");
+              materialElem.className = "material-usage";
+              materialElem.innerHTML = `
+                            <div class="material-header">
+                                <span>${material.type} - ${
+                material.profile
+              } - ${material.size}</span>
+                                <span>${material.length.toFixed(
+                                  2
+                                )} ${currentUnit} Strips</span>
+                            </div>
+                            <div class="size-details">
+                                <div><span>Total:</span> ${
+                                  material.total
+                                } strips</div>
+                                <div><span>Used:</span> ${
+                                  material.used
+                                } strips</div>
+                                <div><span>Remaining:</span> ${
+                                  material.remaining
+                                } strips</div>
+                                <div class="utilization-bar">
+                                    <div class="utilization-fill" style="width: ${
+                                      (material.used / material.total) * 100
+                                    }%"></div>
+                                </div>
+                            </div>
+                        `;
+              materialSummary.appendChild(materialElem);
+            });
+          } else {
+            materialSummary.innerHTML =
+              "<p>No materials used in this plan.</p>";
+          }
+          materialSummaryContainer.appendChild(materialSummary);
+          resultsContainer.appendChild(materialSummaryContainer);
+
+          const cuttingPlanContainer = document.createElement("div");
+          cuttingPlanContainer.className = "result-container";
+          cuttingPlanContainer.innerHTML =
+            '<h3><i class="fas fa-cut"></i> Optimal Cutting Plan</h3>';
+          const cuttingPlan = document.createElement("div");
+          cuttingPlan.id = "cutting-plan";
+
+          if (result.plan.length > 0) {
+            result.plan.forEach((strip, index) => {
+              if (strip.cuts.length === 0) return;
+              const stripElem = document.createElement("div");
+              stripElem.className = "material-usage";
+              const utilization = (
+                ((strip.length - strip.remaining) / strip.length) *
+                100
+              ).toFixed(1);
+
+              let visualization = '<div class="cut-visualization">';
+              let currentPosition = 0;
+              strip.cuts.forEach((cut) => {
+                const widthPercent =
+                  ((cut.length * cut.count) / strip.length) * 100;
+                visualization += `
+                                    <div class="cut-bar">
+                                        <div class="cut-segment cut-segment-used" style="width: ${widthPercent}%; left: ${currentPosition}%">
+                                            <span class="cut-label">${cut.size} x${cut.count}</span>
+                                        </div>
+                                    </div>`;
+                currentPosition += widthPercent;
+              });
+              if (strip.remaining > 0) {
+                visualization += `
+                                    <div class="cut-bar">
+                                        <div class="cut-segment cut-segment-waste" style="width: ${
+                                          (strip.remaining / strip.length) * 100
+                                        }%; left: ${currentPosition}%">
+                                            <span class="cut-label">Waste: ${strip.remaining.toFixed(
+                                              2
+                                            )} ${currentUnit}</span>
+                                        </div>
+                                    </div>`;
+              }
+              visualization += "</div>";
+
+              stripElem.innerHTML = `
+                            <div class="material-header">
+                                <span>Strip #${
+                                  index + 1
+                                } (${strip.length.toFixed(
+                2
+              )} ${currentUnit})</span>
+                                <span>${strip.type} - ${strip.profile} - ${
+                strip.size
+              }</span>
+                            </div>
+                            <div class="material-header">
+                                <span>Waste: ${strip.remaining.toFixed(
+                                  2
+                                )} ${currentUnit}</span>
+                                <span>Utilization: ${utilization}%</span>
+                            </div>
+                            <div class="cuts-list">
+                                ${strip.cuts
+                                  .map(
+                                    (cut) => `
+                                    <div class="cut-item">
+                                        <span class="cut-size">${cut.size}</span>
+                                        <span class="cut-count">${cut.count}</span>
+                                    </div>
+                                `
+                                  )
+                                  .join("")}
+                                ${
+                                  strip.remaining > 0
+                                    ? `
+                                    <div class="cut-item waste-item">
+                                        <i class="fas fa-trash"></i> Waste: ${strip.remaining.toFixed(
+                                          2
+                                        )} ${currentUnit}
+                                    </div>
+                                `
+                                    : ""
+                                }
+                            </div>
+                            ${visualization}
+                        `;
+              cuttingPlan.appendChild(stripElem);
+            });
+          } else {
+            cuttingPlan.innerHTML = "<p>No cutting plan generated.</p>";
+          }
+          cuttingPlanContainer.appendChild(cuttingPlan);
+          resultsContainer.appendChild(cuttingPlanContainer);
+
+          if (result.totalWaste > result.minRimLength) {
+            const warning = document.createElement("div");
+            warning.className = "warning-box";
+            warning.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Note:</strong> The total waste (${result.totalWaste.toFixed(
+                              2
+                            )} ${currentUnit}) is more than the smallest rim length (${result.minRimLength.toFixed(
+              2
+            )} ${currentUnit}). 
+                            <br>Consider producing additional rims to utilize waste.
+                        </div>
+                    `;
+            resultsContainer.insertBefore(warning, resultsContainer.firstChild);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
